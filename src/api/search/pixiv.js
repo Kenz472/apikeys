@@ -49,7 +49,7 @@ async function pixivsearch(characterName, r18 = false) {
         `Author: ${artwork.userName}\n` +
         `Tags: ${artwork.tags.join(", ")}\n` +
         `https://www.pixiv.net/artworks/${artwork.id}\n\n` +
-        `${wm}`
+        `PiXIV SEARCH`
     }
   } catch (error) {
     throw error
