@@ -51,7 +51,7 @@ module.exports = function(app) {
 app.get('/search/pinterest', async (req, res) => {
        const { text } = req.query
         try {
-            const results = await SnackVid(text);  
+            const results = await pinterest(text);  
             res.status(200).json({
                 status: true,
                 result: results
