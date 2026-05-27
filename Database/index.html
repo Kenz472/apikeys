@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Browse through our collection of code snippets, scripts, and tools. Find what you need or discover something new.">
+    <meta name="theme-color" content="#1a202c">
+    <title>Waguri Api</title>
+    <link class="rounded-lg" rel="icon" href="/system/icon.png" type="image/jpeg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              'mono': ['Ubuntu Mono', 'monospace'],
+              'sans': ['Inter', 'system-ui', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar {
+            display: none !important;
+        }
+        body {
+            background-image: url('https://res.cloudinary.com/dlaimtijq/image/upload/v1779757184/yhlkjilt0qedttkbll0q.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .glass {
+            backdrop-filter: blur(16px) saturate(180%);
+            background: rgba(15, 17, 23, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .loader {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #4a5568;
+            border-top: 2px solid #e2e8f0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #a5b4fc 0%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+        .loading-bar {
+            width: 0%;
+            height: 4px;
+            background: #6366f1;
+            box-shadow: 0 0 12px #6366f1;
+            animation: loadProgress 3.5s ease-in-out forwards;
+        }
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body class="text-slate-200 antialiased font-mono min-h-screen relative">
+
+<audio id="bg-audio" src="./system/audio.mp3" loop></audio>
+
+<div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center text-white transition-opacity duration-700 ease-in-out">
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://res.cloudinary.com/dlaimtijq/image/upload/v1779757184/yhlkjilt0qedttkbll0q.jpg');"></div>
+    <div class="absolute inset-0 bg-black/90 backdrop-blur-md"></div>
+    
+    <div class="relative z-10 text-center max-w-md px-6 w-full">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-wider mb-2 text-indigo-400">WAGURI API</h1>
+        <p class="text-xs text-slate-400 mb-8 leading-relaxed">
+            Selamat datang di dokumentasi resmi Waguri API. Platform handal untuk solusi integrasi endpoint sistem, pengolahan data AI, dan optimasi query secara cepat.
+        </p>
+        
+        <div class="w-full bg-slate-800 h-1 mb-8 rounded-full overflow-hidden">
+            <div class="loading-bar"></div>
+        </div>
+        
+        <div class="flex justify-center">
+            <button id="open-btn" class="hidden w-24 h-24 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-sm font-bold uppercase tracking-widest transition-all duration-300 transform scale-90 opacity-0 shadow-lg shadow-indigo-500/30 hover:scale-105 active:scale-95 border-2 border-indigo-400">
+                Open
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0" onclick="toggleSidebar()"></div>
+
+<aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-slate-950/95 border-r border-slate-800 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <span class="font-bold text-sm text-indigo-400 tracking-wider">DAFTAR ENDPOINT</span>
+        <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+    
+    <div class="p-4 border-b border-slate-900">
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="material-icons text-indigo-400 text-xs">search</span>
+            </div>
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Cari fungsionalitas API..." 
+                class="w-full pl-8 pr-3 py-2 text-xs border border-slate-800 bg-slate-900/90 text-slate-300 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            >
+        </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 space-y-4" id="apiList">
+        <div class="loader mx-auto my-8"></div>
+    </div>
+    
+    <div id="noResults" class="text-center py-8 hidden">
+        <p class="text-xs text-slate-500">Endpoint tidak ditemukan.</p>
+    </div>
+</aside>
+
+<main id="main-content" class="max-w-2xl mx-auto px-6 py-12 relative z-10 hidden opacity-0 transition-opacity duration-700">
+
+<div class="glass p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-4">
+            <img src="/system/icon.png" class="w-12 h-12 object-cover rounded-lg border border-slate-700">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold gradient-text">Waguri Api</h1>
+                <p class="text-slate-400 text-[10px] mt-0.5">Versi Stabil Dokumentasi & Playground</p>
+            </div>
+        </div>
+        <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 border border-indigo-500/30 rounded-lg transition-all">
+            <span class="material-icons">menu</span>
+        </button>
+    </div>
+    
+    <p class="text-slate-400 text-xs mb-4">
+        Gunakan tombol menu di atas untuk menjelajahi endpoint API yang tersedia. Konfigurasi dan pengujian dapat dijalankan secara langsung.
+    </p>
+    
+    <div class="text-xs">
+        <a href="https://wa.me/6285758459672" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline font-semibold">development</a>
+    </div>
+</div>
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="glass p-4 rounded-lg flex flex-col justify-between">
+        <span class="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Hari & Tanggal</span>
+        <span id="sys-date" class="text-xs font-bold text-slate-300">Memuat...</span>
+    </div>
+    <div class="glass p-4 rounded-lg flex flex-col justify-between">
+        <span class="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Waktu Server</span>
+        <span id="sys-time" class="text-xs font-bold text-slate-300 font-mono">00:00:00</span>
+    </div>
+    <div class="glass p-4 rounded-lg flex flex-col justify-between">
+        <span class="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Runtime</span>
+        <span id="sys-runtime" class="text-xs font-bold text-slate-300">0d 0h 0m 0s</span>
+    </div>
+    <div class="glass p-4 rounded-lg flex flex-col justify-between">
+        <span class="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Ping & Kecepatan</span>
+        <div class="flex justify-between items-center">
+            <span id="sys-ping" class="text-xs font-bold text-indigo-400">-- ms</span>
+            <span id="sys-speed" class="text-[10px] text-slate-400">-- MB/s</span>
+        </div>
+    </div>
+</div>
+ 
+<div class="glass p-6 mb-6">
+    <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-200 flex items-center">
+            <span class="material-icons text-lg mr-2 text-indigo-400">notifications</span>
+            Informasi Terkini
+        </h2>
+        <span id="unread-count" class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full hidden"></span>
+    </div>
+    <div id="notifications-list" class="space-y-2">
+        <div class="loader mx-auto"></div>
+    </div>
+</div>
+
+<footer class="mt-12 text-center text-slate-500 text-[10px] space-y-1">
+    <p>2025 Waguri Api &bull; by Kenz • coding</p>
+</footer>
+</main>
+
+<script>
+    const bgAudio = document.getElementById('bg-audio');
+    const splashScreen = document.getElementById('splash-screen');
+    const mainContent = document.getElementById('main-content');
+    const openBtn = document.getElementById('open-btn');
+
+    let apiSettings = {
+        "creator": "K E N Z • C O D I N G",
+        "apikey": ["WaguriApi"]
+    };
+
+    async function loadSettings() {
+        try {
+            const res = await fetch('/system/settings.json');
+            const data = await res.json();
+            if (data.apiSettings) {
+                apiSettings = data.apiSettings;
+            }
+        } catch (e) {}
+    }
+
+    function toggleSidebar() {
+        const drawer = document.getElementById('sidebar-drawer');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        if (drawer.classList.contains('-translate-x-full')) {
+            drawer.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.add('opacity-100');
+            }, 50);
+        } else {
+            drawer.classList.add('-translate-x-full');
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    // Menginisialisasi waktu mulai yang disimpan di localStorage agar runtime tidak reset saat reload
+    let startTime = localStorage.getItem('sys_start_time');
+    if (!startTime) {
+        // Set waktu mulai awal (misalnya diatur sejak saat pertama kali web dibuka)
+        startTime = Date.now().toString();
+        localStorage.setItem('sys_start_time', startTime);
+    }
+    startTime = parseInt(startTime);
+
+    function updateSystemStatus() {
+        const now = new Date();
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('sys-date').textContent = now.toLocaleDateString('id-ID', options);
+        
+        document.getElementById('sys-time').textContent = now.toLocaleTimeString('id-ID');
+
+        const diff = Date.now() - startTime;
+        const secs = Math.floor((diff / 1000) % 60);
+        const mins = Math.floor((diff / (1000 * 60)) % 60);
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        document.getElementById('sys-runtime').textContent = `${days}d ${hours}h ${mins}m ${secs}s`;
+
+        const fakePing = Math.floor(Math.random() * 15) + 10;
+        document.getElementById('sys-ping').textContent = `${fakePing} ms`;
+
+        const fakeSpeed = (Math.random() * (98.5 - 90.1) + 90.1).toFixed(1);
+        document.getElementById('sys-speed').textContent = `${fakeSpeed} MB/s`;
+    }
+
+    setInterval(updateSystemStatus, 1000);
+
+    document.addEventListener('click', () => {
+        bgAudio.play().catch(() => {});
+    }, { once: true });
+
+    setTimeout(() => {
+        openBtn.classList.remove('hidden');
+        setTimeout(() => {
+            openBtn.classList.add('scale-100', 'opacity-100');
+        }, 100);
+    }, 3500);
+
+    openBtn.addEventListener('click', () => {
+        bgAudio.play().catch(() => {});
+        splashScreen.classList.add('opacity-0');
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+            mainContent.classList.remove('hidden');
+            setTimeout(() => {
+                mainContent.classList.add('opacity-100');
+                updateSystemStatus();
+            }, 50);
+        }, 700);
+    });
+
+    function toggleCategory(index) {
+        const category = document.getElementById(`category-${index}`);
+        const icon = document.getElementById(`category-icon-${index}`);
+        if (category.classList.contains('hidden')) {
+            category.classList.remove('hidden');
+            icon.textContent = 'expand_less';
+        } else {
+            category.classList.add('hidden');
+            icon.textContent = 'expand_more';
+        }
+    }
+
+    function toggleEndpoint(catIndex, endpointIndex) {
+        const endpoint = document.getElementById(`endpoint-${catIndex}-${endpointIndex}`);
+        const icon = document.getElementById(`endpoint-icon-${catIndex}-${endpointIndex}`);
+        if (endpoint.classList.contains('hidden')) {
+            endpoint.classList.remove('hidden');
+            icon.textContent = 'expand_less';
+        } else {
+            endpoint.classList.add('hidden');
+            icon.textContent = 'expand_more';
+        }
+    }
+
+    function updateUrlPreview(catIndex, endpointIndex, path) {
+        const form = document.getElementById(`form-${catIndex}-${endpointIndex}`);
+        const previewElement = document.getElementById(`url-preview-${catIndex}-${endpointIndex}`);
+        if (!form || !previewElement) return;
+
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+
+        const cleanPath = path.startsWith('/') ? path : '/' + path;
+        const queryStr = params.toString();
+        previewElement.textContent = `${cleanPath}${queryStr ? '?' + queryStr : ''}`;
+    }
+
+    function copyUrl(catIndex, endpointIndex) {
+        const previewElement = document.getElementById(`url-preview-${catIndex}-${endpointIndex}`);
+        if (previewElement) {
+            navigator.clipboard.writeText(previewElement.textContent.trim());
+            alert("Endpoint berhasil disalin.");
+        }
+    }
+
+    async function executeRequest(event, catIndex, endpointIndex, method, path, produces) {
+        event.preventDefault();
+        const form = document.getElementById(`form-${catIndex}-${endpointIndex}`);
+        const responseDiv = document.getElementById(`response-${catIndex}-${endpointIndex}`);
+        const responseContent = document.getElementById(`response-content-${catIndex}-${endpointIndex}`);
+        const LazyClear = document.getElementById(`clear-${catIndex}-${endpointIndex}`);
+        
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        
+        for (const [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+
+        if (params.has('apikey')) {
+            const userKey = params.get('apikey');
+            if (!apiSettings.apikey.includes(userKey)) {
+                responseDiv.classList.remove('hidden');
+                responseContent.innerHTML = `<pre class="overflow-x-auto text-red-400 font-mono text-xs p-2 rounded bg-neutral-950">{\n  "status": false,\n  "creator": "${apiSettings.creator}",\n  "message": "Error: API Key tidak valid!"\n}</pre>`;
+                LazyClear.classList.remove('hidden');
+                return;
+            }
+        }
+
+        const baseOrigin = window.location.origin;
+        const cleanPath = path.startsWith('/') ? path : '/' + path;
+        const fullPath = `${baseOrigin}${cleanPath}?${params.toString()}`;
+
+        responseDiv.classList.remove('hidden');
+        responseContent.innerHTML = '<div class="loader mx-auto"></div>';
+
+        try {
+            const response = await fetch(fullPath);
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const data = await response.json();
+                responseContent.innerHTML = `<pre class="overflow-x-auto whitespace-pre-wrap font-mono text-xs text-white p-2 rounded bg-neutral-950">${JSON.stringify(data, null, 2)}</pre>`;
+            } else if (contentType && contentType.startsWith("image/")) {
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                responseContent.innerHTML = `<img src="${imageUrl}" class="max-w-full h-auto rounded">`;
+            } else {
+                const text = await response.text();
+                responseContent.innerHTML = `<pre class="overflow-x-auto whitespace-pre-wrap font-mono text-xs text-white p-2 rounded bg-neutral-950">${text}</pre>`;
+            }
+        } catch (error) {
+            responseContent.innerHTML = `<pre class="overflow-x-auto text-red-400 font-mono text-xs p-2 rounded bg-neutral-950">${error}</pre>`;
+        }
+        LazyClear.classList.remove('hidden');
+    }
+
+    function clearResponse(catIndex, endpointIndex) {
+        const responseDiv = document.getElementById(`response-${catIndex}-${endpointIndex}`);
+        const responseContent = document.getElementById(`response-content-${catIndex}-${endpointIndex}`);
+        const LazyClear = document.getElementById(`clear-${catIndex}-${endpointIndex}`);
+        responseContent.innerHTML = '';
+        responseDiv.classList.add('hidden');
+        LazyClear.classList.add('hidden');
+    }
+
+    async function loadApis() {
+        const apiList = document.getElementById('apiList');
+        try {
+            const response = await fetch('/system/settings.json');
+            const data = await response.json();
+            
+            let html = '';
+            data.categories.forEach((category, catIndex) => {
+                html += `
+                <div class="category-group mb-4" data-category="${category.name}">
+                    <div class="glass overflow-hidden rounded-md border border-slate-800">
+                        <button onclick="toggleCategory(${catIndex})" class="w-full px-4 py-3 text-left flex items-center justify-between bg-slate-900/60 hover:bg-slate-900/80 transition-colors duration-150">
+                            <h2 class="font-bold flex items-center">
+                                <span class="material-icons text-sm mr-2.5 text-indigo-400">folder</span>
+                                <span class="truncate max-w-[140px] text-xs tracking-wider uppercase">${category.name}</span>
+                                <span class="ml-2 text-[10px] text-slate-500">(${category.items.length})</span>
+                            </h2>
+                            <span class="material-icons text-sm transition-transform duration-150" id="category-icon-${catIndex}">expand_more</span>
+                        </button>
+                        
+                        <div id="category-${catIndex}" class="hidden">`;
+                
+                category.items.forEach((item, endpointIndex) => {
+                    const method = 'GET';
+                    const pathParts = item.path.split('?');
+                    const path = pathParts[0];
+                    const queryParams = new URLSearchParams(pathParts[1] || '');
+
+                    const statusClasses = {
+                        'ready': 'bg-green-500/20 text-green-400 border border-green-500/30',
+                        'update': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+                        'error': 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    };
+                    const statusClass = statusClasses[item.status] || 'bg-slate-700 text-slate-300';
+                    
+                    const cleanPath = path.startsWith('/') ? path : '/' + path;
+                    const queryStr = queryParams.toString();
+                    const domainUrlPreview = `${cleanPath}${queryStr ? '?' + queryStr : ''}`;
+
+                    html += `
+                                <div class="border-t border-slate-800/80 api-item" 
+                                     data-method="${method}"
+                                     data-path="${path}"
+                                     data-alias="${item.name}"
+                                     data-description="${item.desc}"
+                                     data-category="${category.name}">
+                                    <button onclick="toggleEndpoint(${catIndex}, ${endpointIndex})" class="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-slate-900/40 transition-colors duration-150">
+                                        <div class="flex items-center min-w-0 flex-1">
+                                            <span class="inline-block px-2 py-0.5 text-[10px] font-bold text-white mr-3 flex-shrink-0 bg-indigo-600 rounded">
+                                                ${method}
+                                            </span>
+                                            <div class="flex flex-col min-w-0 flex-1">
+                                                <span class="font-semibold truncate max-w-[90%] font-mono text-[11px] text-indigo-300" title="${path}">${path}</span>
+                                                <div class="flex items-center mt-1">
+                                                    <span class="text-[10px] text-slate-400 truncate max-w-[80%]" title="${item.name}">${item.name}</span>
+                                                    <span class="ml-2 px-1.5 py-0.2 text-[9px] rounded ${statusClass}">${item.status || 'ready'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span class="material-icons text-xs text-slate-500 transition-transform duration-150 flex-shrink-0" id="endpoint-icon-${catIndex}-${endpointIndex}">expand_more</span>
+                                    </button>
+                                    
+                                    <div id="endpoint-${catIndex}-${endpointIndex}" class="hidden bg-slate-950/40 p-4 border-t border-slate-850">
+                                        <div class="mb-4">
+                                            <div class="text-slate-400 text-[11px] mb-3">${item.desc}</div>
+                                            
+                                            <div class="bg-slate-900 border border-slate-800 p-2 rounded flex items-center justify-between gap-2 overflow-hidden">
+                                                <span id="url-preview-${catIndex}-${endpointIndex}" class="text-[10px] font-mono text-indigo-300 truncate select-all">
+                                                    ${domainUrlPreview}
+                                                </span>
+                                                <button type="button" onclick="copyUrl(${catIndex}, ${endpointIndex})" class="text-slate-400 hover:text-indigo-400 flex-shrink-0" title="Salin URL">
+                                                    <span class="material-icons text-sm">content_copy</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        `;
+                    if (item.status === 'ready') {
+                        html += `
+                                            <div>
+                                                <div class="text-slate-300 font-bold text-xs mb-3 flex items-center">
+                                                    <span class="material-icons text-sm mr-1 text-indigo-400">play_arrow</span>
+                                                    UJI ENDPOINT
+                                                </div>
+                                                <div>
+                                                    <form id="form-${catIndex}-${endpointIndex}" onsubmit="executeRequest(event, ${catIndex}, ${endpointIndex}, '${method}', '${path}', 'application/json')" oninput="updateUrlPreview(${catIndex}, ${endpointIndex}, '${path}')">
+                                                        <div class="mb-4 space-y-3">`;
+                        if (item.params) {
+                            Object.keys(item.params).forEach(paramName => {
+                                const isRequired = !queryParams.has(paramName) || queryParams.get(paramName) === '';
+                                const defaultVal = queryParams.get(paramName) || '';
+                                 html += `<div>
+                                            <label class="block text-[10px] font-medium text-slate-400 mb-1.5">${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}</label>
+                                            <input type="text" name="${paramName}" value="${defaultVal}" class="w-full px-3 py-2 border border-slate-800 text-xs focus:outline-none focus:border-indigo-500 bg-slate-900/90 text-slate-300 placeholder:text-slate-600 rounded" placeholder="${item.params[paramName]}" ${isRequired ? 'required' : ''}>
+                                          </div>`;
+                            });
+                        }
+                        html += `
+                                                        </div>
+                                                        <div class="flex items-center gap-2">
+                                                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 font-bold text-white px-4 py-2 text-xs transition-colors duration-150 rounded">
+                                                                Kirim
+                                                            </button>
+                                                            <button type="button" id="clear-${catIndex}-${endpointIndex}" onclick="clearResponse(${catIndex}, ${endpointIndex})" class="hidden bg-slate-800 border border-slate-700 hover:bg-slate-750 font-semibold text-slate-300 px-4 py-2 text-xs transition-colors duration-150 rounded">
+                                                                Reset
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>`;
+                    } else {
+                        html += `<div class="text-yellow-400 text-xs p-3 bg-yellow-500/10 border border-yellow-500/20 rounded">Sistem sedang diuji coba. Akses dinonaktifkan sementara waktu.</div>`;
+                    }
+
+                    html += `
+                                        <div id="response-${catIndex}-${endpointIndex}" class="hidden mt-4">
+                                            <div class="text-slate-300 font-bold text-xs mb-2 flex items-center">
+                                                <span class="material-icons text-sm mr-1 text-indigo-400">code</span>
+                                                HASIL RESPONS JSON
+                                            </div>
+                                            <div class="bg-neutral-950 text-white text-xs p-3 border border-slate-800 rounded">
+                                                <div class="max-h-80 overflow-auto" id="response-content-${catIndex}-${endpointIndex}"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                });
+                html += `</div></div></div>`;
+            });
+            apiList.innerHTML = html;
+        } catch (error) {
+            apiList.innerHTML = '<p class="text-red-400 text-xs text-center">Gagal memproses konfigurasi API.</p>';
+            console.error(error);
+        }
+    }
+    
+    async function loadNotifications() {
+        const notificationsList = document.getElementById('notifications-list');
+        const unreadCountBadge = document.getElementById('unread-count');
+        try {
+            const response = await fetch('/notifications.json');
+            const notifications = await response.json();
+
+            notificationsList.innerHTML = '';
+            let unreadCount = 0;
+
+            notifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            notifications.forEach(notif => {
+                if (!notif.read) {
+                    unreadCount++;
+                }
+                const notifElement = document.createElement('div');
+                notifElement.className = `bg-slate-900/60 border border-slate-800 p-3.5 rounded text-xs ${notif.read ? 'opacity-60' : ''}`;
+                notifElement.innerHTML = `
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-300 mb-1">${notif.title}</p>
+                            <p class="text-slate-400 leading-relaxed text-[11px]">${notif.message}</p>
+                        </div>
+                        <div class="flex items-center flex-shrink-0 text-[10px] text-slate-500">
+                            ${!notif.read ? '<div class="w-2 h-2 bg-indigo-400 rounded-full mr-2"></div>' : ''}
+                            <span>${new Date(notif.date).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        </div>
+                    </div>
+                `;
+                notificationsList.appendChild(notifElement);
+            });
+
+            if (unreadCount > 0) {
+                unreadCountBadge.textContent = `${unreadCount} Baru`;
+                unreadCountBadge.classList.remove('hidden');
+            }
+
+        } catch (error) {
+            notificationsList.innerHTML = '<p class="text-red-400 text-xs text-center">Gagal memperbarui notifikasi.</p>';
+            console.error(error);
+        }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const apiItems = document.querySelectorAll('.api-item');
+        const categories = document.querySelectorAll('.category-group');
+        const noResults = document.getElementById('noResults');
+        let visibleCount = 0;
+
+        apiItems.forEach(item => {
+            const path = item.dataset.path.toLowerCase();
+            const alias = item.dataset.alias.toLowerCase();
+            const description = item.dataset.description.toLowerCase();
+            
+            if (path.includes(searchTerm) || alias.includes(searchTerm) || description.includes(searchTerm)) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        categories.forEach(category => {
+            const visibleItems = category.querySelectorAll('.api-item[style=""]');
+            if (visibleItems.length > 0) {
+                category.style.display = '';
+            } else {
+                category.style.display = 'none';
+            }
+        });
+
+        if (visibleCount === 0) {
+            noResults.classList.remove('hidden');
+        } else {
+            noResults.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadSettings();
+        await loadApis();
+        await loadNotifications();
+    });
+</script>
+
+</body>
+</html>
