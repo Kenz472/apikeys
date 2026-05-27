@@ -1,0 +1,273 @@
+{
+  "name": "waguri-Api",
+  "version": "V1.0.0",
+  "description": "simple api waguri",
+  "header": {
+    "status": "Online!"
+  },
+  "apiSettings": {
+    "creator": "K E N Z • C O D I N G",
+    "apikey": [
+      "WaguriApi"
+    ]
+  },
+  "categories": [
+    {
+      "name": "OpenAI",
+      "items": [
+        {
+          "name": "OpenAI",
+          "desc": "Chat dengan asisten pintar OpenAI yang cepat dan cerdas.",
+          "path": "/ai/openai?text=",
+          "status": "ready",
+          "params": {
+            "text": "Teks atau pertanyaan yang ingin diajukan ke AI."
+          }
+        },
+        {
+          "name": "Alisa Mikhailovna Kujou",
+          "desc": "Chat dengan Alya, gadis blasteran Rusia-Jepang yang tsundere dan suka berbisik dalam bahasa Rusia.",
+          "path": "/ai/alya?text=",
+          "status": "ready",
+          "params": {
+            "text": "Teks atau pesan untuk dikirim ke Alya-san."
+          }
+        },
+        {
+          "name": "Waguri-chan",
+          "desc": "Chat dengan Waguri Kaoruko, gadis SMA yang sangat manis, ceria, tulus, dan penyuka makanan manis.",
+          "path": "/ai/waguri?text=",
+          "status": "ready",
+          "params": {
+            "text": "Teks atau pesan untuk dikirim ke Waguri-chan."
+          }
+        },
+        {
+          "name": "Mahiru Shiina (Angel-sama)",
+          "desc": "Chat dengan Shiina Mahiru, asisten rumah tangga pribadi yang sangat perhatian, lembut, dan siap memanjakanmu.",
+          "path": "/ai/mahiru?text=",
+          "status": "ready",
+          "params": {
+            "text": "Teks atau pesan untuk dikirim ke Mahiru-chan."
+          }
+        },
+        {
+          "name": "Masha Kujou",
+          "desc": "Chat dengan Masha, kakak perempuan Alya yang sangat manja, tulus, penyayang, dan suka memanjakanmu.",
+          "path": "/ai/masha?text=",
+          "status": "ready",
+          "params": {
+            "text": "Teks atau pesan untuk dikirim ke Masha-san."
+          }
+        },
+        {
+          "name": "Kuro (Neko-chan)",
+          "desc": "Chat dengan Kuro, gadis kucing nakal yang manja, genit, suka menggoda, dan selalu memanggilmu Master.",
+          "path": "/ai/neko?text=",
+          "status": "ready",
+          "params": {
+            "text": "Teks atau pesan nakal/manja untuk dikirim ke Kuro."
+          }
+        },
+        {
+          "name": "WebPilot AI",
+          "desc": "Asisten AI ahli pemrograman yang merancang, menulis, dan mengoptimalkan fitur JavaScript, HTML, CSS, dan teknologi web lainnya.",
+          "path": "/ai/webpilot?text=",
+          "status": "ready",
+          "params": {
+            "text": "Rancangan fitur atau instruksi pemrograman yang ingin dibuat."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Downloader",
+      "items": [
+        {
+          "name": "Download Facebook",
+          "desc": "Unduh video atau gambar dari Facebook.",
+          "path": "/download/facebook?url=",
+          "status": "ready",
+          "params": {
+            "url": "URL video atau gambar Facebook yang ingin diunduh."
+          }
+        },
+        {
+          "name": "Download Instagram",
+          "desc": "Unduh video atau gambar dari Instagram.",
+          "path": "/download/instagram?url=",
+          "status": "ready",
+          "params": {
+            "url": "URL video atau gambar Instagram yang ingin diunduh."
+          }
+        },
+        {
+          "name": "Download Video",
+          "desc": "Unduh video dari berbagai platform.",
+          "path": "/download/videy?url=",
+          "status": "ready",
+          "params": {
+            "url": "URL video yang ingin diunduh."
+          }
+        },
+        {
+          "name": "Download TikTok",
+          "desc": "Unduh video dari TikTok.",
+          "path": "/download/tiktok?url=",
+          "status": "ready",
+          "params": {
+            "url": "URL video TikTok yang ingin diunduh."
+          }
+        },
+        {
+          "name": "Download Douyin",
+          "desc": "Unduh video dari Douyin.",
+          "path": "/download/douyin?url=",
+          "status": "ready",
+          "params": {
+            "url": "URL video Douyin yang ingin diunduh."
+          }
+        }
+      ]
+    },
+    {
+      "name": "TOOLS",
+      "items": [
+        {
+          "name": "Text to Speech",
+          "desc": "Mengubah teks tertulis menjadi suara audio.",
+          "path": "/tools/tts?text=",
+          "status": "ready",
+          "params": {
+            "text": "Teks yang ingin diubah menjadi suara."
+          }
+        },
+        {
+          "name": "Host Info",
+          "desc": "Mendapatkan informasi detail mengenai suatu host atau domain.",
+          "path": "/tools/hostinfo?host=",
+          "status": "ready",
+          "params": {
+            "host": "Nama domain atau host yang ingin diperiksa."
+          }
+        },
+        {
+          "name": "Cek NSFW",
+          "desc": "Mendeteksi apakah suatu gambar mengandung unsur NSFW.",
+          "path": "/tools/ceknsfw?url=",
+          "status": "ready",
+          "params": {
+            "url": "URL gambar yang ingin diperiksa."
+          }
+        },
+        {
+          "name": "Emoji Mixer",
+          "desc": "Menggabungkan dua emoji berbeda menjadi satu gambar baru.",
+          "path": "/tools/emojimix?emoji1=&emoji2=",
+          "status": "ready",
+          "params": {
+            "emoji1": "Karakter emoji pertama yang ingin digabungkan.",
+            "emoji2": "Karakter emoji kedua yang ingin digabungkan."
+          }
+        }
+      ]
+    },
+    {
+      "name": "NSFW",
+      "items": [
+        {
+          "name": "NSFW Ass",
+          "desc": "Menampilkan gambar acak bertema bokong (ass).",
+          "path": "/nsfw/ass",
+          "status": "ready"
+        },
+        {
+          "name": "NSFW Anal",
+          "desc": "Menampilkan gambar acak bertema anal.",
+          "path": "/nsfw/anal",
+          "status": "ready"
+        },
+        {
+          "name": "NSFW Pussy",
+          "desc": "Menampilkan gambar acak bertema organ intim wanita (pussy).",
+          "path": "/nsfw/pussy",
+          "status": "ready"
+        },
+        {
+          "name": "NSFW Bokep",
+          "desc": "Menampilkan video atau konten dewasa secara acak.",
+          "path": "/nsfw/bokep",
+          "status": "ready"
+        }
+      ]
+    },
+    {
+      "name": "SEARCH",
+      "items": [
+        {
+          "name": "Pinterest Search",
+          "desc": "Mencari gambar atau pin di Pinterest berdasarkan kata kunci.",
+          "path": "/search/pinterest?text=",
+          "status": "ready",
+          "params": {
+            "text": "Kata kunci pencarian gambar yang ingin dicari di Pinterest."
+          }
+        },
+        {
+          "name": "Pixiv Search",
+          "desc": "Mencari ilustrasi atau gambar di Pixiv.",
+          "path": "/search/pixiv?text=",
+          "status": "ready",
+          "params": {
+            "text": "Kata kunci pencarian ilustrasi di Pixiv."
+          }
+        },
+        {
+          "name": "Sfile Search",
+          "desc": "Mencari file yang diunggah di platform Sfile.",
+          "path": "/search/sfile?text=",
+          "status": "ready",
+          "params": {
+            "text": "Nama file atau kata kunci pencarian di Sfile."
+          }
+        },
+        {
+          "name": "SnackVideo Search",
+          "desc": "Mencari video di platform SnackVideo.",
+          "path": "/search/snackvideo?text=",
+          "status": "ready",
+          "params": {
+            "text": "Kata kunci pencarian video di SnackVideo."
+          }
+        },
+        {
+          "name": "Spotify Search",
+          "desc": "Mencari lagu, artis, atau album di Spotify.",
+          "path": "/search/spotify?text=",
+          "status": "ready",
+          "params": {
+            "text": "Judul lagu atau nama artis yang ingin dicari di Spotify."
+          }
+        },
+        {
+          "name": "TikTok Search",
+          "desc": "Mencari video di platform TikTok.",
+          "path": "/search/tiktok?text=",
+          "status": "ready",
+          "params": {
+            "text": "Kata kunci atau topik video yang ingin dicari di TikTok."
+          }
+        },
+        {
+          "name": "YouTube Search",
+          "desc": "Mencari video atau konten di YouTube.",
+          "path": "/search/youtube?text=",
+          "status": "ready",
+          "params": {
+            "text": "Kata kunci pencarian video di YouTube."
+          }
+        }
+      ]
+    }
+  ]
+}
