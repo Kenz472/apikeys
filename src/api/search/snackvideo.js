@@ -60,7 +60,7 @@ async function SnackVid(text) {
                 msg: e.message
             };
         }
-    },
+     }
 
 module.exports = function(app) {
 app.get('/search/snackvideo', async (req, res) => {
