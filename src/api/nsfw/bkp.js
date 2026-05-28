@@ -80,19 +80,30 @@ module.exports = function(app) {
                 return res.status(404).send('Video tidak ditemukan');
             }
 
-            const videoStream = await axios({
+            const clientHeaders = {
+                'User-Agent': headers['User-Agent']
+            };
+
+            if (req.headers.range) {
+                clientHeaders['Range'] = req.headers.range;
+            }
+
+            const videoResponse = await axios({
                 method: 'get',
                 url: videoUrl,
                 responseType: 'stream',
-                headers: { 'User-Agent': headers['User-Agent'] }
+                headers: clientHeaders,
+                validateStatus: (status) => status >= 200 && status < 300
             });
 
-            res.writeHead(200, {
-                'Content-Type': videoStream.headers['content-type'] || 'video/mp4',
-                'Content-Length': videoStream.headers['content-length'],
+            res.writeHead(videoResponse.status, {
+                'Content-Type': videoResponse.headers['content-type'] || 'video/mp4',
+                'Content-Length': videoResponse.headers['content-length'],
+                'Content-Range': videoResponse.headers['content-range'],
+                'Accept-Ranges': 'bytes'
             });
 
-            videoStream.data.pipe(res);
+            videoResponse.data.pipe(res);
 
         } catch (error) {
             res.status(500).send(`Error: ${error.message}`);
