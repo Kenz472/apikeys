@@ -1,106 +1,101 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+const headers = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+  'Referer': 'https://videyly.site/'
+};
+
 async function videyly() {
   try {
-    let { data: Html1 } = await axios.get("https://videyly.site");
+    let { data: Html1 } = await axios.get("https://videyly.site", { headers });
     let $ = cheerio.load(Html1);
-    const urlrl = $('iframe#v').attr('src');
-    if (!urlrl) throw new Error("Iframe tidak ditemukan");
+    let urlrl = $('iframe#v').attr('src');
+    
+    if (!urlrl) throw new Error('Iframe tidak ditemukan');
 
-    let { data: Html2 } = await axios.get(urlrl);
+    if (urlrl.startsWith('//')) {
+      urlrl = 'https:' + urlrl;
+    } else if (urlrl.startsWith('/')) {
+      urlrl = 'https://videyly.site' + urlrl;
+    }
+
+    let { data: Html2 } = await axios.get(urlrl, { headers });
     let $$ = cheerio.load(Html2);
     const video = $$('video source');
     const downurl = video.attr('src');
-    
-    if (!downurl) throw new Error("Source video tidak ditemukan di videyly");
+
+    if (!downurl) throw new Error('Sumber video tidak ditemukan');
     return downurl;
   } catch (e) {
-    throw new Error(`videyly: ${e.message}`);
+    throw new Error(e.message);
   }
 }
 
 async function getVideoUrl() {
-  try {
-    const characters = 'abcdefghijklmnopqrstuvwxyz1234567890';
-    let random = '';
-    for (let i = 0; i < 5; i++) {
-      random += characters.charAt(Math.floor(Math.random() * characters.length));
+  const characters = 'abcdefghijklmnopqrstuvwxyz1234567890';
+  
+  for (let i = 0; i < 5; i++) {
+    try {
+      let random = '';
+      for (let j = 0; j < 5; j++) {
+        random += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      
+      const response = await axios.get(`https://viday.uk/v/?viral=${random}`, { headers, timeout: 5000 });
+      const $ = cheerio.load(response.data);
+      const videoUrl = $('#videoPlayer source').attr('src');
+      
+      if (videoUrl) {
+        return videoUrl;
+      }
+    } catch (error) {
     }
-    
-    const response = await axios.get(`https://viday.uk/v/?viral=${random}`);
-    const $ = cheerio.load(response.data);
-    const videoUrl = $('#videoPlayer source').attr('src');
-    
-    if (!videoUrl) {
-      throw new Error('Video URL tidak ditemukan di viday');
-    }
-
-    return videoUrl;
-  } catch (error) {
-    throw new Error(`getVideoUrl: ${error.message}`);
   }
+  throw new Error('Gagal mendapatkan video setelah beberapa percobaan');
 }
 
 module.exports = function(app) {
+    
     app.get('/nsfw/bokep', async (req, res) => {
-        try {
-            const pilihSumber = Math.random() < 0.5;
-            let videoUrl = "";
+        let videoUrl = null;
+        const useVideyly = Math.random() < 0.5;
 
-            if (pilihSumber) {
-                videoUrl = await videyly();
+        try {
+            if (useVideyly) {
+                try {
+                    videoUrl = await videyly();
+                } catch (e) {
+                    videoUrl = await getVideoUrl();
+                }
             } else {
-                videoUrl = await getVideoUrl();
+                try {
+                    videoUrl = await getVideoUrl();
+                } catch (e) {
+                    videoUrl = await videyly();
+                }
             }
 
             if (!videoUrl) {
-                return res.status(404).send("Gagal mendapatkan URL video.");
+                return res.status(404).send('Video tidak ditemukan');
             }
 
-            // Membaca header 'Range' dari browser pengguna (untuk fitur mempercepat video)
-            const range = req.headers.range;
-            const axiosHeaders = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            };
-
-            if (range) {
-                axiosHeaders['Range'] = range;
-            }
-
-            // Ambil data stream dari link video asli
-            const videoResponse = await axios({
+            const videoStream = await axios({
                 method: 'get',
                 url: videoUrl,
                 responseType: 'stream',
-                headers: axiosHeaders
+                headers: { 'User-Agent': headers['User-Agent'] }
             });
 
-            // Kirim header respon yang tepat agar browser tahu video ini bisa dipercepat (Accept-Ranges: bytes)
-            res.writeHead(videoResponse.status, {
-                'Content-Type': videoResponse.headers['content-type'] || 'video/mp4',
-                'Content-Length': videoResponse.headers['content-length'],
-                'Content-Range': videoResponse.headers['content-range'],
-                'Accept-Ranges': 'bytes'
+            res.writeHead(200, {
+                'Content-Type': videoStream.headers['content-type'] || 'video/mp4',
+                'Content-Length': videoStream.headers['content-length'],
             });
 
-            // Membaca data stream dari link lalu menulisnya ke respon dan diakhiri dengan res.end()
-            videoResponse.data.on('data', (chunk) => {
-                res.write(chunk);
-            });
-
-            videoResponse.data.on('end', () => {
-                res.end();
-            });
-
-            videoResponse.data.on('error', (err) => {
-                res.end();
-            });
+            videoStream.data.pipe(res);
 
         } catch (error) {
-            if (!res.headersSent) {
-                res.status(500).send(`Error: ${error.message}`);
-            }
+            res.status(500).send(`Error: ${error.message}`);
         }
     });
 };
