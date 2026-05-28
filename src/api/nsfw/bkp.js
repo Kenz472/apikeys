@@ -8,11 +8,11 @@ const headers = {
 
 async function videyly() {
   try {
-    let { data: Html1 } = await axios.get("https://videyly.site", { headers });
+    let { data: Html1 } = await axios.get("https://videyly.site", { headers, timeout: 5000 });
     let $ = cheerio.load(Html1);
     let urlrl = $('iframe#v').attr('src');
     
-    if (!urlrl) throw new Error('Iframe tidak ditemukan');
+    if (!urlrl) return null;
 
     if (urlrl.startsWith('//')) {
       urlrl = 'https:' + urlrl;
@@ -20,15 +20,14 @@ async function videyly() {
       urlrl = 'https://videyly.site' + urlrl;
     }
 
-    let { data: Html2 } = await axios.get(urlrl, { headers });
+    let { data: Html2 } = await axios.get(urlrl, { headers, timeout: 5000 });
     let $$ = cheerio.load(Html2);
     const video = $$('video source');
     const downurl = video.attr('src');
 
-    if (!downurl) throw new Error('Sumber video tidak ditemukan');
-    return downurl;
+    return downurl || null;
   } catch (e) {
-    throw new Error(e.message);
+    return null;
   }
 }
 
@@ -42,7 +41,7 @@ async function getVideoUrl() {
         random += characters.charAt(Math.floor(Math.random() * characters.length));
       }
       
-      const response = await axios.get(`https://viday.uk/v/?viral=${random}`, { headers, timeout: 5000 });
+      const response = await axios.get(`https://viday.uk/v/?viral=${random}`, { headers, timeout: 4000 });
       const $ = cheerio.load(response.data);
       const videoUrl = $('#videoPlayer source').attr('src');
       
@@ -52,61 +51,63 @@ async function getVideoUrl() {
     } catch (error) {
     }
   }
-  throw new Error('Gagal mendapatkan video setelah beberapa percobaan');
+  return null;
 }
 
 module.exports = function(app) {
-    
     app.get('/nsfw/bokep', async (req, res) => {
-        let videoUrl = null;
-        const useVideyly = Math.random() < 0.5;
+        const sources = Math.random() < 0.5 ? [videyly, getVideoUrl] : [getVideoUrl, videyly];
+        let success = false;
 
-        try {
-            if (useVideyly) {
-                try {
-                    videoUrl = await videyly();
-                } catch (e) {
-                    videoUrl = await getVideoUrl();
+        for (const getSrc of sources) {
+            try {
+                const videoUrl = await getSrc();
+                if (!videoUrl) continue;
+
+                const clientHeaders = {
+                    'User-Agent': headers['User-Agent']
+                };
+
+                if (req.headers.range) {
+                    clientHeaders['Range'] = req.headers.range;
                 }
-            } else {
-                try {
-                    videoUrl = await getVideoUrl();
-                } catch (e) {
-                    videoUrl = await videyly();
+
+                const videoResponse = await axios({
+                    method: 'get',
+                    url: videoUrl,
+                    responseType: 'stream',
+                    headers: clientHeaders,
+                    timeout: 10000,
+                    validateStatus: (status) => status >= 200 && status < 300
+                });
+
+                const contentType = videoResponse.headers['content-type'];
+                if (!contentType || !contentType.includes('video')) {
+                    videoResponse.data.destroy();
+                    continue;
                 }
+
+                res.writeHead(videoResponse.status, {
+                    'Content-Type': contentType,
+                    'Content-Length': videoResponse.headers['content-length'],
+                    'Content-Range': videoResponse.headers['content-range'],
+                    'Accept-Ranges': 'bytes'
+                });
+
+                videoResponse.data.pipe(res);
+
+                req.on('close', () => {
+                    videoResponse.data.destroy();
+                });
+
+                success = true;
+                break;
+            } catch (error) {
             }
+        }
 
-            if (!videoUrl) {
-                return res.status(404).send('Video tidak ditemukan');
-            }
-
-            const clientHeaders = {
-                'User-Agent': headers['User-Agent']
-            };
-
-            if (req.headers.range) {
-                clientHeaders['Range'] = req.headers.range;
-            }
-
-            const videoResponse = await axios({
-                method: 'get',
-                url: videoUrl,
-                responseType: 'stream',
-                headers: clientHeaders,
-                validateStatus: (status) => status >= 200 && status < 300
-            });
-
-            res.writeHead(videoResponse.status, {
-                'Content-Type': videoResponse.headers['content-type'] || 'video/mp4',
-                'Content-Length': videoResponse.headers['content-length'],
-                'Content-Range': videoResponse.headers['content-range'],
-                'Accept-Ranges': 'bytes'
-            });
-
-            videoResponse.data.pipe(res);
-
-        } catch (error) {
-            res.status(500).send(`Error: ${error.message}`);
+        if (!success) {
+            res.status(404).end();
         }
     });
 };
