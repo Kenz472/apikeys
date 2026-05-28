@@ -6,6 +6,20 @@ const headers = {
   'Referer': 'https://videyly.site/'
 };
 
+async function checkVideo(url) {
+  if (!url) return false;
+  try {
+    const res = await axios.get(url, {
+      headers: { ...headers, Range: 'bytes=0-0' },
+      timeout: 4000
+    });
+    const contentType = res.headers['content-type'];
+    return contentType && contentType.includes('video');
+  } catch (e) {
+    return false;
+  }
+}
+
 async function videyly() {
   try {
     let { data: Html1 } = await axios.get("https://videyly.site", { headers, timeout: 5000 });
@@ -57,56 +71,25 @@ async function getVideoUrl() {
 module.exports = function(app) {
     app.get('/nsfw/bokep', async (req, res) => {
         const sources = Math.random() < 0.5 ? [videyly, getVideoUrl] : [getVideoUrl, videyly];
-        let success = false;
+        let finalUrl = null;
 
         for (const getSrc of sources) {
             try {
                 const videoUrl = await getSrc();
-                if (!videoUrl) continue;
-
-                const clientHeaders = {
-                    'User-Agent': headers['User-Agent']
-                };
-
-                if (req.headers.range) {
-                    clientHeaders['Range'] = req.headers.range;
+                if (videoUrl) {
+                    const isValid = await checkVideo(videoUrl);
+                    if (isValid) {
+                        finalUrl = videoUrl;
+                        break;
+                    }
                 }
-
-                const videoResponse = await axios({
-                    method: 'get',
-                    url: videoUrl,
-                    responseType: 'stream',
-                    headers: clientHeaders,
-                    timeout: 10000,
-                    validateStatus: (status) => status >= 200 && status < 300
-                });
-
-                const contentType = videoResponse.headers['content-type'];
-                if (!contentType || !contentType.includes('video')) {
-                    videoResponse.data.destroy();
-                    continue;
-                }
-
-                res.writeHead(videoResponse.status, {
-                    'Content-Type': contentType,
-                    'Content-Length': videoResponse.headers['content-length'],
-                    'Content-Range': videoResponse.headers['content-range'],
-                    'Accept-Ranges': 'bytes'
-                });
-
-                videoResponse.data.pipe(res);
-
-                req.on('close', () => {
-                    videoResponse.data.destroy();
-                });
-
-                success = true;
-                break;
             } catch (error) {
             }
         }
 
-        if (!success) {
+        if (finalUrl) {
+            res.redirect(finalUrl);
+        } else {
             res.status(404).end();
         }
     });
