@@ -1,121 +1,39 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
-
-const headers = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-  'Referer': 'https://videyly.site/'
-};
-
-async function videyly() {
-  try {
-    let { data: Html1 } = await axios.get("https://videyly.site", { headers, timeout: 5000 });
-    let $ = cheerio.load(Html1);
-    let urlrl = $('iframe#v').attr('src');
-    
-    if (!urlrl) return null;
-
-    if (urlrl.startsWith('//')) {
-      urlrl = 'https:' + urlrl;
-    } else if (urlrl.startsWith('/')) {
-      urlrl = 'https://videyly.site' + urlrl;
-    }
-
-    let { data: Html2 } = await axios.get(urlrl, { headers, timeout: 5000 });
-    let $$ = cheerio.load(Html2);
-    const video = $$('video source');
-    const downurl = video.attr('src');
-
-    return downurl || null;
-  } catch (e) {
-    return null;
-  }
-}
-
-async function getVideoUrl() {
-  const characters = 'abcdefghijklmnopqrstuvwxyz1234567890';
-  
-  for (let i = 0; i < 5; i++) {
-    try {
-      let random = '';
-      for (let j = 0; j < 5; j++) {
-        random += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-      
-      const response = await axios.get(`https://viday.uk/v/?viral=${random}`, { headers, timeout: 4000 });
-      const $ = cheerio.load(response.data);
-      const videoUrl = $('#videoPlayer source').attr('src');
-      
-      if (videoUrl) {
-        return videoUrl;
-      }
-    } catch (error) {
-    }
-  }
-  return null;
-}
+const cheerio = require("cheerio");
 
 module.exports = function(app) {
-    app.get('/nsfw/bokep', async (req, res) => {
-        const sources = Math.random() < 0.5 ? [videyly, getVideoUrl] : [getVideoUrl, videyly];
-        let success = false;
+    async function getBokep() {
+        try {
+            // 1. Ambil HTML halaman
+            let { data } = await axios.get(`https://cidey.biz/e/${Math.random().toString(36).substr(2, 6)}.mp4`);
+            let $ = cheerio.load(data);
+            let videoUrl = $('source').attr('src');
+            
+            if (!videoUrl) throw new Error("Video tidak ditemukan");
 
-        for (const getSrc of sources) {
-            try {
-                const videoUrl = await getSrc();
-                if (!videoUrl) continue;
+            // 2. Ambil data video sebagai ArrayBuffer
+            let response = await axios.get(videoUrl, {
+                responseType: 'arraybuffer'
+            });
 
-                const videoOrigin = new URL(videoUrl).origin;
-                const clientHeaders = {
-                    'User-Agent': headers['User-Agent'],
-                    'Referer': videoOrigin + '/'
-                };
-
-                if (req.headers.range) {
-                    clientHeaders['Range'] = req.headers.range;
-                }
-
-                const videoResponse = await axios({
-                    method: 'get',
-                    url: videoUrl,
-                    responseType: 'stream',
-                    headers: clientHeaders,
-                    timeout: 10000,
-                    validateStatus: (status) => status >= 200 && status < 300
-                });
-
-                const contentType = videoResponse.headers['content-type'];
-                if (!contentType || !contentType.includes('video')) {
-                    videoResponse.data.destroy();
-                    continue;
-                }
-
-                const resHeaders = {
-                    'Accept-Ranges': 'bytes'
-                };
-                if (contentType) resHeaders['Content-Type'] = contentType;
-                if (videoResponse.headers['content-length']) resHeaders['Content-Length'] = videoResponse.headers['content-length'];
-                if (videoResponse.headers['content-range']) resHeaders['Content-Range'] = videoResponse.headers['content-range'];
-
-                res.writeHead(videoResponse.status, resHeaders);
-
-                videoResponse.data.pipe(res);
-
-                req.on('close', () => {
-                    videoResponse.data.destroy();
-                });
-
-                videoResponse.data.on('error', () => {
-                    res.end();
-                });
-
-                success = true;
-                break;
-            } catch (error) {
-            }
+            return response.data; // Ini adalah buffer-nya
+        } catch (e) {
+            throw e;
         }
+    }
 
-        if (!success) {
-            res.status(404).end();
+    app.get('/nsfw/bokep', async (req, res) => {
+        try {
+            const videoBuffer = await getBokep();
+            
+            // Mengirim buffer ke client
+            res.writeHead(200, {
+                'Content-Type': 'video/mp4', // Ubah ke video/mp4
+                'Content-Length': videoBuffer.length,
+            });
+            res.end(videoBuffer);
+        } catch (error) {
+            res.status(500).send(`Error: ${error.message}`);
         }
     });
 };
