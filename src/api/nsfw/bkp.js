@@ -28,7 +28,7 @@ module.exports = function(app) {
             
             // Mengirim buffer ke client
             res.writeHead(200, {
-                'Content-Type': 'video/mp4', // Ubah ke video/mp4
+                'Content-Type': 'video/mp4',
                 'Content-Length': videoBuffer.length,
             });
             res.end(videoBuffer);
