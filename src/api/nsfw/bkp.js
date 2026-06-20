@@ -1,27 +1,52 @@
 const axios = require('axios');
-const cheerio = require("cheerio");
 
 module.exports = function(app) {
-    async function getBokep() {
-        try {
-            // 1. Ambil HTML halaman
-            let { data } = await axios.get(`https://cidey.biz/e/${Math.random().toString(36).substr(2, 6)}.mp4`);
-            let $ = cheerio.load(data);
-            let videoUrl = $('source').attr('src');
-            
-            if (!videoUrl) throw new Error("Video tidak ditemukan");
+    function generateRandomString(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
-            // 2. Ambil data video sebagai ArrayBuffer
-            let response = await axios.get(videoUrl, {
+async function getVideoUrl() {
+  try {
+    let urlList = [
+      "https://viday.uk/v/viral",
+      "https://viday.uk/v/trending",
+      "https://viday.uk/v/live",
+      "https://viday.uk/v/populer"
+    ];
+
+    let selectedUrlBase = urlList[Math.floor(Math.random() * urlList.length)];
+    let randomId = generateRandomString(8);
+    const apiUrl = `${selectedUrlBase}=${randomId}`; 
+
+    const { data: html } = await axios.get(apiUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      }
+    });
+
+    const match = html.match(/<source[^>]+src=["']([^"']+\.mp4)["']/i);
+
+    if (match && match[1]) {
+      let videoUrl = match[1]; 
+      let response = await axios.get(videoUrl, {
                 responseType: 'arraybuffer'
             });
-
-            return response.data; // Ini adalah buffer-nya
-        } catch (e) {
-            throw e;
-        }
+            return response.data;
+    } else {
+      console.log('Tidak ada URL video MP4 yang ditemukan dalam respons.');
+      return null;
     }
-
+  } catch (e) {
+    console.log('Error ambil video:', e.message);
+    return e.message; 
+  }
+}
     app.get('/nsfw/bokep', async (req, res) => {
         try {
             const videoBuffer = await getBokep();
