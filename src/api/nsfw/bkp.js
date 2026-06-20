@@ -49,7 +49,7 @@ async function getVideoUrl() {
 }
     app.get('/nsfw/bokep', async (req, res) => {
         try {
-            const videoBuffer = await getBokep();
+            const videoBuffer = await getVideoUrl();
             
             // Mengirim buffer ke client
             res.writeHead(200, {
